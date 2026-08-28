@@ -1,34 +1,68 @@
 import { NextResponse } from "next/server";
+import { sql, bancoConfigurado } from "@/lib/db";
+import { CATEGORIAS, calcular, type Respostas } from "@/lib/quiz";
+
+type Perfil = {
+  nome?: string;
+  idade?: string;
+  genero?: string;
+  whatsapp?: string;
+  satisfacao?: number | null;
+};
 
 /**
- * Recebe o lead do quiz.
+ * Grava o lead do quiz no Neon.
  *
- * PONTO DE INTEGRACAO: hoje isto so registra no log da Vercel, o que ja permite
- * conferir que os dados chegam. Escolher um destino antes de rodar trafego:
+ * O resultado e recalculado aqui a partir das respostas cruas, e nao lido do
+ * que o navegador mandou: assim a pontuacao tem uma fonte unica, em lib/quiz.ts.
  *
- *   - Supabase  -> insert em `leads_quiz`
- *   - Planilha  -> POST no webhook do Google Apps Script
- *   - CRM/WhatsApp -> POST no webhook da ferramenta
- *
- * Enquanto nao houver destino, NENHUM lead fica guardado.
+ * Se DATABASE_URL nao estiver definida, a rota responde 200 e avisa no log em
+ * vez de quebrar. O quiz nunca depende disto pra mostrar o resultado dela.
  */
 export async function POST(request: Request) {
+  let corpo: { perfil?: Perfil; respostas?: Respostas };
+
   try {
-    const dados = await request.json();
-
-    console.log("[lead]", JSON.stringify(dados));
-
-    const webhook = process.env.LEAD_WEBHOOK_URL;
-    if (webhook) {
-      await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
-      });
-    }
-
-    return NextResponse.json({ ok: true });
+    corpo = await request.json();
   } catch {
     return NextResponse.json({ ok: false, erro: "payload inválido" }, { status: 400 });
+  }
+
+  const perfil = corpo.perfil ?? {};
+  const respostas = corpo.respostas ?? {};
+  const resultado = calcular(respostas);
+
+  if (!bancoConfigurado || !sql) {
+    console.warn("[lead] DATABASE_URL ausente, lead não foi guardado:", JSON.stringify({ perfil, resultado }));
+    return NextResponse.json({ ok: true, guardado: false });
+  }
+
+  try {
+    const idade = Number.parseInt(String(perfil.idade ?? ""), 10);
+
+    await sql`
+      insert into leads_quiz (
+        nome, idade, genero, whatsapp, satisfacao,
+        categoria_predominante, percentual_categorias,
+        top_processos, pontos_processos, respostas
+      ) values (
+        ${perfil.nome?.trim() || null},
+        ${Number.isFinite(idade) ? idade : null},
+        ${perfil.genero || null},
+        ${perfil.whatsapp?.trim() || null},
+        ${typeof perfil.satisfacao === "number" ? perfil.satisfacao : null},
+        ${CATEGORIAS[resultado.categoriaPredominante].nome},
+        ${JSON.stringify(resultado.percentualCategoria)},
+        ${JSON.stringify(resultado.topProcessos)},
+        ${JSON.stringify(resultado.pontosProcesso)},
+        ${JSON.stringify(respostas)}
+      )
+    `;
+
+    return NextResponse.json({ ok: true, guardado: true });
+  } catch (erro) {
+    // Guardar o lead nunca pode derrubar o resultado dela. Erro fica no log da Vercel.
+    console.error("[lead] falha ao gravar no Neon:", erro);
+    return NextResponse.json({ ok: true, guardado: false });
   }
 }

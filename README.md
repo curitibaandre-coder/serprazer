@@ -49,15 +49,49 @@ quatro frações são levadas a somar 100. A tela de resultado mostra essa conta
 > mais dois processos (por exemplo privacidade e logística, sono e energia) para que as quatro
 > categorias tenham o mesmo número de oportunidades. Aí a contagem bruta passa a funcionar sozinha.
 
-## Lead
+## Lead (Neon)
 
-`app/api/lead/route.ts` registra o lead no log e, se existir a variável abaixo, encaminha:
+Ao fim do quiz o navegador manda perfil e respostas para `/api/lead`, que **recalcula o resultado
+no servidor** (fonte única em `lib/quiz.ts`, o navegador não decide a pontuação) e grava no Neon.
 
+Se `DATABASE_URL` não existir, a rota responde `{ ok: true, guardado: false }` e avisa no log.
+**A tela de resultado nunca depende do banco:** se a gravação falhar, ela aparece do mesmo jeito.
+
+### Ligar o banco (uma vez)
+
+1. No [Neon](https://console.neon.tech), crie um projeto e copie a **connection string** (pooled).
+2. Na Vercel, em Settings › Environment Variables, adicione `DATABASE_URL` para Production,
+   Preview e Development.
+3. Aqui na máquina, crie `.env.local` com a mesma linha (o arquivo já está no `.gitignore`):
+   ```
+   DATABASE_URL=postgresql://...
+   ```
+4. Crie a tabela:
+   ```bash
+   npm run db:init
+   ```
+5. Faça um redeploy na Vercel para a variável entrar em vigor.
+
+### O que fica guardado
+
+Tabela `leads_quiz`: `nome`, `idade`, `genero`, `whatsapp`, `satisfacao` (0 a 10),
+`categoria_predominante`, e em `jsonb` os `percentual_categorias`, `top_processos`,
+`pontos_processos` e as `respostas` cruas. Guardar as respostas cruas permite recalcular tudo
+depois, caso a pontuação ou o balanceamento do instrumento mudem.
+
+Consulta rápida no SQL Editor do Neon:
+
+```sql
+select criado_em, nome, whatsapp, satisfacao, categoria_predominante
+from leads_quiz order by criado_em desc limit 50;
+
+-- distribuição das categorias predominantes
+select categoria_predominante, count(*) from leads_quiz group by 1 order by 2 desc;
 ```
-LEAD_WEBHOOK_URL=https://...
-```
 
-**Sem essa variável nenhum lead fica guardado.** Configurar antes de rodar tráfego.
+> Dados de saúde sexual são sensíveis. Vale definir com a equipe por quanto tempo esses registros
+> ficam guardados e quem tem acesso ao banco, e deixar isso escrito na política de privacidade
+> antes de rodar tráfego.
 
 ## Identidade visual
 
