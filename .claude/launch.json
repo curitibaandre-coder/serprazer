@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "serprazer",
+      "runtimeExecutable": "C:\\PROGRA~1\\nodejs\\npm.cmd",
+      "runtimeArgs": [
+        "--prefix",
+        "C:\\Users\\André Pereira\\Desktop\\serprazer",
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    }
+  ]
+}
