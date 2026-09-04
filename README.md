@@ -14,7 +14,7 @@ npm run build
 
 | Rota | O que é |
 |---|---|
-| `/` | O quiz inteiro: abertura, cadastro, 10 perguntas e resultado |
+| `/` | O quiz inteiro: abertura, cadastro, 8 perguntas, escala de disposição e resultado |
 | `/proximo-passo` | Destino do CTA do resultado. Placeholder até a mini VSL entrar |
 | `/api/lead` | Recebe o lead ao fim do quiz |
 
@@ -22,11 +22,11 @@ npm run build
 
 Ficam todos em [`lib/quiz.ts`](lib/quiz.ts): perguntas, alternativas, processos, categorias e pontuação.
 
-São **10 perguntas × 5 alternativas**. Cada alternativa vale 1 ponto para **um dos 10 processos**,
-e cada processo aparece exatamente 5 vezes, uma vez em cada posição (A a E). Os 10 processos se
-agrupam em **4 categorias**, que são as fatias do gráfico:
+São **8 perguntas × 5 alternativas**, mais uma escala final de disposição que não pontua e serve de
+gancho para a VSL. Cada alternativa vale 1 ponto para **um dos 10 fatores específicos**, e cada um
+aparece exatamente 4 vezes. Esses 10 se agrupam nas **4 categorias** que viram as fatias do gráfico:
 
-| Categoria | Rótulo interno | Processos |
+| Categoria | Rótulo interno | Fatores específicos |
 |---|---|---|
 | Emoções e crenças | laranja | crenças e regras · regulação emocional · autoimagem |
 | Relacionamento | amarelo | assertividade · comunicação · intimidade |
@@ -35,8 +35,8 @@ agrupam em **4 categorias**, que são as fatias do gráfico:
 
 ### Por que o gráfico não usa a contagem bruta
 
-As categorias têm tamanhos diferentes: **contexto de vida reúne 1 processo (teto de 5 pontos)** e
-as outras três reúnem 3 processos cada (**teto de 15**). Em contagem bruta, contexto nunca passaria
+As categorias têm tamanhos diferentes: **contexto de vida reúne 1 fator (teto de 4 pontos)** e as
+outras três reúnem 3 fatores cada (**teto de 12**). Em contagem bruta, contexto nunca passaria
 de um terço do peso das demais, e o gráfico ficaria enviesado por construção.
 
 Por isso cada categoria vira a **fração do próprio teto** que a pessoa endossou, e só então as
@@ -44,9 +44,9 @@ quatro frações são levadas a somar 100. A tela de resultado mostra essa conta
 "ver os números por trás do gráfico".
 
 > **Decisão a confirmar com a equipe clínica.** A normalização corrige o viés do instrumento, mas
-> muda a leitura: uma escolha em contexto (1 de 5) pesa mais que uma escolha em emoções (1 de 15).
+> muda a leitura: uma escolha em contexto (1 de 4) pesa mais que uma escolha em emoções (1 de 12).
 > A alternativa estruturalmente melhor é **rebalancear o instrumento**, dando a contexto de vida
-> mais dois processos (por exemplo privacidade e logística, sono e energia) para que as quatro
+> mais dois fatores (por exemplo privacidade e logística, sono e energia) para que as quatro
 > categorias tenham o mesmo número de oportunidades. Aí a contagem bruta passa a funcionar sozinha.
 
 ## Lead (Neon)
@@ -74,7 +74,7 @@ Se `DATABASE_URL` não existir, a rota responde `{ ok: true, guardado: false }` 
 
 ### O que fica guardado
 
-Tabela `leads_quiz`: `nome`, `idade`, `genero`, `whatsapp`, `satisfacao` (0 a 10),
+Tabela `leads_quiz`: `nome`, `idade`, `genero`, `whatsapp`, `satisfacao` e `disposicao` (0 a 10),
 `categoria_predominante`, e em `jsonb` os `percentual_categorias`, `top_processos`,
 `pontos_processos` e as `respostas` cruas. Guardar as respostas cruas permite recalcular tudo
 depois, caso a pontuação ou o balanceamento do instrumento mudem.

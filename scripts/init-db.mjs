@@ -27,6 +27,7 @@ await sql`
     genero                 text,
     whatsapp               text,
     satisfacao             int,
+    disposicao             int,
     categoria_predominante text,
     percentual_categorias  jsonb,
     top_processos          jsonb,
@@ -34,6 +35,9 @@ await sql`
     respostas              jsonb
   )
 `;
+
+// para bancos criados antes desta coluna existir
+await sql`alter table leads_quiz add column if not exists disposicao int`;
 
 await sql`create index if not exists leads_quiz_criado_em_idx on leads_quiz (criado_em desc)`;
 await sql`create index if not exists leads_quiz_categoria_idx on leads_quiz (categoria_predominante)`;

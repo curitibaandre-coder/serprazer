@@ -22,7 +22,7 @@ export const CATEGORIAS: Record<CategoriaId, Categoria> = {
     cor: "#D4785A",
     corEscura: "#D4785A",
     texto:
-      "Aqui entram as ideias sobre como o sexo “deveria” funcionar, as emoções que ocupam espaço na hora íntima e a atenção voltada para avaliar o próprio corpo. São processos que acontecem dentro de você, e que costumam aparecer como cobrança, ansiedade ou autocrítica.",
+      "É o que acontece dentro de você na hora íntima. As ideias sobre como o sexo “deveria” ser, a cobrança de sentir vontade de um jeito certo, a ansiedade que não desliga e a atenção presa em como o seu corpo está sendo visto. Quanto mais espaço isso ocupa, menos espaço sobra para perceber o prazer.",
   },
   relacionamento: {
     id: "relacionamento",
@@ -31,7 +31,7 @@ export const CATEGORIAS: Record<CategoriaId, Categoria> = {
     cor: "#2E8FC4",
     corEscura: "#3B95C8",
     texto:
-      "Aqui entram a proximidade com a parceria, a possibilidade de conversar sobre sexualidade e a facilidade de dizer o que você quer e o que não quer. São processos que acontecem no encontro com a outra pessoa.",
+      "É o que acontece entre vocês dois. A proximidade e o carinho do dia a dia, conseguir conversar sobre sexo sem que vire briga, e conseguir dizer na hora o que você quer e o que não quer. Quando isso trava, a vontade costuma travar junto.",
   },
   contexto: {
     id: "contexto",
@@ -40,7 +40,7 @@ export const CATEGORIAS: Record<CategoriaId, Categoria> = {
     cor: "#2C7A3E",
     corEscura: "#3C8B50",
     texto:
-      "Aqui entra tudo o que acontece antes de qualquer situação íntima: cansaço, excesso de responsabilidades, pressa, falta de privacidade e pouco espaço dedicado à intimidade na rotina.",
+      "É tudo o que acontece antes de qualquer clima existir. Cansaço, excesso de tarefas, pressa, falta de privacidade e uma rotina que não deixa sobrar espaço para vocês. Quando não sobra espaço na vida, é difícil sobrar vontade.",
   },
   autoconhecimento: {
     id: "autoconhecimento",
@@ -49,7 +49,7 @@ export const CATEGORIAS: Record<CategoriaId, Categoria> = {
     cor: "#6B2F94",
     corEscura: "#8449B0",
     texto:
-      "Aqui entram o quanto as experiências têm sido prazerosas, o tipo de estímulo que chega até você e a variedade daquilo que vocês vivem. São processos ligados a conhecer e ajustar o que funciona para o seu corpo.",
+      "É o quanto o que acontece na cama funciona para você. Se o sexo tem sido realmente prazeroso, se os toques e o ritmo combinam com o que você gosta, e se existe alguma variedade. É difícil querer repetir algo que dá pouco prazer.",
   },
 };
 
@@ -238,35 +238,13 @@ export const PERGUNTAS: Pergunta[] = [
       { letra: "E", texto: "Sinto que aquela experiência aumenta ainda mais a distância entre mim e minha parceria.", processo: "intimidade" },
     ],
   },
-  {
-    id: 9,
-    enunciado:
-      "Pensando nos últimos meses, qual destas situações mais tem diminuído sua disponibilidade para o sexo?",
-    alternativas: [
-      { letra: "A", texto: "Excesso de trabalho, tarefas, preocupações ou cansaço.", processo: "estilo" },
-      { letra: "B", texto: "Sensação de que o sexo não oferece tanto prazer ou recompensa.", processo: "desconexao" },
-      { letra: "C", texto: "Conflitos, afastamento ou falta de proximidade na relação.", processo: "intimidade" },
-      { letra: "D", texto: "Pouca variedade nas experiências que tenho vivido.", processo: "repertorio" },
-      { letra: "E", texto: "Dificuldade de receber estímulos que realmente despertem minha excitação.", processo: "estimulacao" },
-    ],
-  },
-  {
-    id: 10,
-    enunciado: "Quando existe possibilidade de sexo, qual destas situações mais facilmente faz sua vontade desaparecer?",
-    alternativas: [
-      { letra: "A", texto: "Começar a me preocupar com meu corpo ou aparência.", processo: "autoimagem" },
-      { letra: "B", texto: "Perceber que não consigo falar claramente sobre aquilo de que preciso.", processo: "assertividade" },
-      { letra: "C", texto: "Sentir ansiedade, pressão, irritação ou alguma emoção difícil.", processo: "regulacao" },
-      { letra: "D", texto: "Sentir que não conseguimos conversar bem sobre nossa vida sexual.", processo: "comunicacao" },
-      { letra: "E", texto: "Pensar que preciso corresponder ou que existe uma forma certa de fazer sexo.", processo: "crencas" },
-    ],
-  },
 ];
 
-/** Quantas vezes cada processo aparece no instrumento (5 por processo, uma vez em cada posicao). */
-export const APARICOES_POR_PROCESSO = 5;
-
-/** Teto de pontos de cada categoria = numero de processos dela x aparicoes. */
+/**
+ * Teto de pontos de cada categoria, contado direto das perguntas que existem
+ * hoje. Fica derivado do instrumento de proposito: se uma pergunta entrar ou
+ * sair, o teto se corrige sozinho e o grafico continua honesto.
+ */
 export const TETO_POR_CATEGORIA: Record<CategoriaId, number> = (() => {
   const t: Record<CategoriaId, number> = {
     emocoes: 0,
@@ -274,7 +252,9 @@ export const TETO_POR_CATEGORIA: Record<CategoriaId, number> = (() => {
     contexto: 0,
     autoconhecimento: 0,
   };
-  for (const p of Object.values(PROCESSOS)) t[p.categoria] += APARICOES_POR_PROCESSO;
+  for (const pergunta of PERGUNTAS) {
+    for (const alt of pergunta.alternativas) t[PROCESSOS[alt.processo].categoria] += 1;
+  }
   return t;
 })();
 
@@ -358,12 +338,3 @@ function arredondarPara100(p: Record<CategoriaId, number>) {
 }
 
 export const ORDEM_CATEGORIAS_EXIBICAO = ORDEM_CATEGORIAS;
-
-export const FECHAMENTO = {
-  titulo: "Este quiz não oferece um diagnóstico.",
-  paragrafos: [
-    "Ele foi criado para ajudar você a identificar alguns processos que podem estar participando da sua dificuldade com o desejo sexual. É bastante comum que mais de um deles apareça ao mesmo tempo e que esses processos se influenciem mutuamente.",
-    "Além disso, mudanças no desejo também podem estar relacionadas a aspectos que este quiz não consegue avaliar completamente, como condições de saúde, uso de medicamentos, dor, alterações hormonais e questões de saúde mental.",
-    "Se a mudança no desejo estiver causando sofrimento ou interferindo na sua qualidade de vida ou nos seus relacionamentos, uma avaliação individualizada com um profissional qualificado pode ajudar a compreender melhor o que está acontecendo.",
-  ],
-};

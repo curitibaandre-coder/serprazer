@@ -8,6 +8,7 @@ type Perfil = {
   genero?: string;
   whatsapp?: string;
   satisfacao?: number | null;
+  disposicao?: number | null;
 };
 
 /**
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
 
     await sql`
       insert into leads_quiz (
-        nome, idade, genero, whatsapp, satisfacao,
+        nome, idade, genero, whatsapp, satisfacao, disposicao,
         categoria_predominante, percentual_categorias,
         top_processos, pontos_processos, respostas
       ) values (
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
         ${perfil.genero || null},
         ${perfil.whatsapp?.trim() || null},
         ${typeof perfil.satisfacao === "number" ? perfil.satisfacao : null},
+        ${typeof perfil.disposicao === "number" ? perfil.disposicao : null},
         ${CATEGORIAS[resultado.categoriaPredominante].nome},
         ${JSON.stringify(resultado.percentualCategoria)},
         ${JSON.stringify(resultado.topProcessos)},

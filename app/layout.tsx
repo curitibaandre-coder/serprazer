@@ -16,13 +16,13 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "O que pode estar interferindo no seu desejo sexual?",
+  title: "Veja o que está acontecendo com o seu desejo",
   description:
-    "Um questionário da SER Sexualidades & Relacionamentos para identificar os processos que podem estar participando da sua dificuldade com o desejo. Leva poucos minutos e não é um diagnóstico.",
+    "Um quiz da SER Sexualidades & Relacionamentos para descobrir os principais fatores que podem estar atrapalhando o seu desejo hoje. Leva poucos minutos e não é um diagnóstico.",
   openGraph: {
-    title: "O que pode estar interferindo no seu desejo sexual?",
+    title: "Veja o que está acontecendo com o seu desejo",
     description:
-      "Poucos minutos, dez perguntas, e no final você vê os processos mais presentes hoje. Feito por psicólogas.",
+      "Poucos minutos e no final você vê os fatores que mais aparecem nas suas respostas. Feito por psicólogas.",
     locale: "pt_BR",
     type: "website",
   },

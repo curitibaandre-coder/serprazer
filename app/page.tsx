@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Donut, { type FatiaDonut } from "@/components/Donut";
 import {
   CATEGORIAS,
-  FECHAMENTO,
   ORDEM_CATEGORIAS_EXIBICAO,
   PERGUNTAS,
   PROCESSOS,
@@ -17,18 +16,28 @@ import {
 const MAX_POR_PERGUNTA = 2;
 const LINK_VSL = "/proximo-passo";
 
+type Etapa = "abertura" | "perfil" | "perguntas" | "disposicao" | "resultado";
+
 type Perfil = {
   nome: string;
   idade: string;
   genero: string;
   whatsapp: string;
   satisfacao: number | null;
+  disposicao: number | null;
 };
 
-const PERFIL_VAZIO: Perfil = { nome: "", idade: "", genero: "", whatsapp: "", satisfacao: null };
+const PERFIL_VAZIO: Perfil = {
+  nome: "",
+  idade: "",
+  genero: "",
+  whatsapp: "",
+  satisfacao: null,
+  disposicao: null,
+};
 
 export default function Quiz() {
-  const [etapa, setEtapa] = useState<"abertura" | "perfil" | "perguntas" | "resultado">("abertura");
+  const [etapa, setEtapa] = useState<Etapa>("abertura");
   const [perfil, setPerfil] = useState<Perfil>(PERFIL_VAZIO);
   const [indice, setIndice] = useState(0);
   const [respostas, setRespostas] = useState<Respostas>({});
@@ -37,20 +46,26 @@ export default function Quiz() {
   const selecionadas = respostas[pergunta?.id] ?? [];
   const resultado = useMemo(() => calcular(respostas), [respostas]);
 
-  const totalEtapas = PERGUNTAS.length + 1;
-  const etapaAtual = etapa === "perfil" ? 1 : etapa === "perguntas" ? indice + 2 : totalEtapas;
+  // perfil + perguntas + disposicao
+  const totalEtapas = PERGUNTAS.length + 2;
+  const etapaAtual =
+    etapa === "perfil" ? 1 : etapa === "perguntas" ? indice + 2 : totalEtapas;
   const progresso =
     etapa === "abertura" ? 0 : etapa === "resultado" ? 100 : (etapaAtual / totalEtapas) * 100;
 
   function alternar(processo: ProcessoId) {
     setRespostas((atual) => {
       const atuais = atual[pergunta.id] ?? [];
-      const jaTem = atuais.includes(processo);
-      const novas = jaTem
+      const novas = atuais.includes(processo)
         ? atuais.filter((p) => p !== processo)
         : [...atuais, processo].slice(-MAX_POR_PERGUNTA);
       return { ...atual, [pergunta.id]: novas };
     });
+  }
+
+  function irPara(proxima: Etapa) {
+    setEtapa(proxima);
+    window.scrollTo({ top: 0 });
   }
 
   function avancar() {
@@ -58,20 +73,28 @@ export default function Quiz() {
       setIndice(indice + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      enviarLead(perfil, respostas);
-      setEtapa("resultado");
-      window.scrollTo({ top: 0 });
+      irPara("disposicao");
     }
   }
 
   function voltar() {
-    if (indice === 0) setEtapa("perfil");
-    else setIndice(indice - 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (indice === 0) irPara("perfil");
+    else {
+      setIndice(indice - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function concluir() {
+    enviarLead(perfil, respostas);
+    irPara("resultado");
   }
 
   const perfilCompleto =
-    perfil.nome.trim().length > 1 && perfil.idade !== "" && perfil.genero !== "" && perfil.satisfacao !== null;
+    perfil.nome.trim().length > 1 &&
+    perfil.idade !== "" &&
+    perfil.genero !== "" &&
+    perfil.satisfacao !== null;
 
   return (
     <div className="shell">
@@ -92,7 +115,7 @@ export default function Quiz() {
                 aria-valuenow={Math.round(progresso)}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label="Progresso do questionário"
+                aria-label="Progresso do quiz"
               >
                 <div className="progress-fill" style={{ width: `${progresso}%` }} />
               </div>
@@ -102,28 +125,27 @@ export default function Quiz() {
       </header>
 
       <main>
-        {etapa === "abertura" && <Abertura onComecar={() => setEtapa("perfil")} />}
+        {etapa === "abertura" && <Abertura onComecar={() => irPara("perfil")} />}
 
         {etapa === "perfil" && (
           <FormPerfil
             perfil={perfil}
             setPerfil={setPerfil}
             completo={perfilCompleto}
-            onAvancar={() => {
-              setEtapa("perguntas");
-              window.scrollTo({ top: 0 });
-            }}
+            onAvancar={() => irPara("perguntas")}
           />
         )}
 
         {etapa === "perguntas" && pergunta && (
           <section className="stack">
             <div className="stack-sm">
-              <span className="eyebrow">Pergunta {indice + 1} de {PERGUNTAS.length}</span>
+              <span className="eyebrow">
+                Pergunta {indice + 1} de {PERGUNTAS.length}
+              </span>
               <h1 className="h-pergunta">{pergunta.enunciado}</h1>
               <p className="nota">
                 Escolha uma ou duas alternativas, as que mais combinam com o que você tem vivido
-                atualmente. Não existe resposta certa ou errada.
+                agora. Não existe resposta certa ou errada.
               </p>
             </div>
 
@@ -148,10 +170,58 @@ export default function Quiz() {
             </div>
 
             <div className="acoes">
-              <button type="button" className="btn btn-primary" onClick={avancar} disabled={selecionadas.length === 0}>
-                {indice + 1 === PERGUNTAS.length ? "Ver meu resultado" : "Continuar"}
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={avancar}
+                disabled={selecionadas.length === 0}
+              >
+                Continuar
               </button>
               <button type="button" className="btn btn-ghost" onClick={voltar}>
+                Voltar
+              </button>
+            </div>
+          </section>
+        )}
+
+        {etapa === "disposicao" && (
+          <section className="stack">
+            <div className="stack-sm">
+              <span className="eyebrow">Última pergunta</span>
+              <h1 className="h-pergunta">
+                Quanto você está disposta a cuidar e melhorar a sua vida sexual?
+              </h1>
+              <p className="nota">
+                Responda com sinceridade. Não tem resposta certa, e ninguém vai cobrar nada de você.
+              </p>
+            </div>
+
+            <Escala
+              rotulo="Disposição hoje"
+              valor={perfil.disposicao}
+              onEscolher={(n) => setPerfil({ ...perfil, disposicao: n })}
+              esquerda="Não é o meu momento"
+              direita="Estou pronta"
+            />
+
+            <div className="acoes">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={concluir}
+                disabled={perfil.disposicao === null}
+              >
+                Ver o meu resultado
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setIndice(PERGUNTAS.length - 1);
+                  irPara("perguntas");
+                }}
+              >
                 Voltar
               </button>
             </div>
@@ -171,16 +241,15 @@ export default function Quiz() {
 function Abertura({ onComecar }: { onComecar: () => void }) {
   return (
     <section className="stack">
-      <span className="eyebrow">Questionário</span>
-      <h1 className="h-abertura">O que pode estar interferindo no seu desejo sexual?</h1>
+      <span className="eyebrow">Quiz</span>
+      <h1 className="h-abertura">Veja o que está acontecendo com o seu desejo</h1>
       <p className="lede">
-        O desejo sexual pode ser afetado por muitas coisas diferentes. Em cada pergunta, escolha as
-        alternativas que mais combinam com o que você tem vivido atualmente. Não existe resposta certa
-        ou errada.
+        Responda algumas perguntas e descubra quais são os principais fatores que podem estar
+        atrapalhando o seu desejo hoje. Leva poucos minutos e não existe resposta certa ou errada.
       </p>
       <p className="nota">
-        São dez perguntas e leva poucos minutos. No final você vê quais processos estão mais presentes
-        hoje, com uma explicação de cada um. Este questionário não oferece um diagnóstico.
+        No final você recebe um resultado com os fatores que mais apareceram nas suas respostas,
+        explicados de um jeito simples.
       </p>
       <div className="acoes">
         <button type="button" className="btn btn-primary" onClick={onComecar}>
@@ -188,6 +257,48 @@ function Abertura({ onComecar }: { onComecar: () => void }) {
         </button>
       </div>
     </section>
+  );
+}
+
+function Escala({
+  rotulo,
+  valor,
+  onEscolher,
+  esquerda,
+  direita,
+}: {
+  rotulo: string;
+  valor: number | null;
+  onEscolher: (n: number) => void;
+  esquerda: string;
+  direita: string;
+}) {
+  const id = `escala-${rotulo.replace(/\s+/g, "-").toLowerCase()}`;
+  return (
+    <div className="campo">
+      <span className="escala-legenda" style={{ marginBottom: 2 }}>
+        <span id={id} style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+          {rotulo}
+        </span>
+      </span>
+      <div className="escala" role="group" aria-labelledby={id}>
+        {Array.from({ length: 11 }, (_, n) => (
+          <button
+            key={n}
+            type="button"
+            aria-pressed={valor === n}
+            aria-label={`${n} de 10`}
+            onClick={() => onEscolher(n)}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <div className="escala-legenda">
+        <span>{esquerda}</span>
+        <span>{direita}</span>
+      </div>
+    </div>
   );
 }
 
@@ -302,13 +413,7 @@ function FormPerfil({
   );
 }
 
-function Resultado({
-  perfil,
-  resultado,
-}: {
-  perfil: Perfil;
-  resultado: ReturnType<typeof calcular>;
-}) {
+function Resultado({ perfil, resultado }: { perfil: Perfil; resultado: ReturnType<typeof calcular> }) {
   const fatias: FatiaDonut[] = ORDEM_CATEGORIAS_EXIBICAO.map((id) => ({
     id,
     nome: CATEGORIAS[id].nome,
@@ -325,22 +430,22 @@ function Resultado({
       <section className="stack-sm">
         <span className="eyebrow">Seu resultado</span>
         <h1 className="h-abertura">
-          {primeiroNome ? `${primeiroNome}, ` : ""}o que mais aparece nas suas respostas
+          {primeiroNome ? `${primeiroNome}, ` : ""}veja o que mais apareceu nas suas respostas
         </h1>
         <p className="lede">
-          Baixo desejo quase nunca tem uma causa só. Estes são os quatro grupos de processos que podem
-          estar participando, e o peso de cada um nas suas respostas.
+          O desejo quase nunca é afetado por uma coisa só. Estes são os quatro fatores que mais
+          influenciam, e o peso de cada um no que você respondeu.
         </p>
       </section>
 
-      <section className="card grafico-bloco" aria-label="Distribuição por categoria">
+      <section className="card grafico-bloco" aria-label="Distribuição dos fatores">
         <div className="donut-holder">
           <Donut
             fatias={fatias}
-            titulo={`Distribuição das suas respostas entre as quatro categorias. Predominante: ${predominante.nome}, ${resultado.percentualCategoria[predominante.id]}%.`}
+            titulo={`Como as suas respostas se distribuem entre os quatro fatores. O que mais pesa é ${predominante.nome}, com ${resultado.percentualCategoria[predominante.id]}%.`}
           />
           <div className="donut-centro">
-            <span className="rotulo">Predominante</span>
+            <span className="rotulo">O que mais pesa</span>
             <span className="valor">{resultado.percentualCategoria[predominante.id]}%</span>
             <span className="nome">{predominante.nome}</span>
           </div>
@@ -367,7 +472,7 @@ function Resultado({
             <table>
               <thead>
                 <tr>
-                  <th scope="col">Categoria</th>
+                  <th scope="col">Fator</th>
                   <th scope="col">Escolhas</th>
                   <th scope="col">Máximo</th>
                   <th scope="col">Peso</th>
@@ -379,8 +484,12 @@ function Resultado({
                     <th scope="row" style={{ fontWeight: 400, color: "var(--ink)" }}>
                       {f.nome}
                     </th>
-                    <td className="num">{resultado.pontosCategoria[f.id as keyof typeof resultado.pontosCategoria]}</td>
-                    <td className="num">{TETO_POR_CATEGORIA[f.id as keyof typeof TETO_POR_CATEGORIA]}</td>
+                    <td className="num">
+                      {resultado.pontosCategoria[f.id as keyof typeof resultado.pontosCategoria]}
+                    </td>
+                    <td className="num">
+                      {TETO_POR_CATEGORIA[f.id as keyof typeof TETO_POR_CATEGORIA]}
+                    </td>
                     <td className="num">{f.valor}%</td>
                   </tr>
                 ))}
@@ -388,34 +497,20 @@ function Resultado({
             </table>
           </div>
           <p className="nota" style={{ marginTop: 12 }}>
-            As categorias têm tamanhos diferentes dentro do questionário: contexto de vida reúne um
-            processo e as outras três reúnem três cada. Por isso o peso não é a contagem bruta, e sim
-            a fração do máximo de cada categoria que você endossou.
+            Os fatores têm tamanhos diferentes dentro do quiz: contexto de vida aparece menos vezes
+            que os outros três. Por isso o peso não é a contagem simples, e sim o quanto de cada
+            fator você marcou em relação ao total que ele poderia ter.
           </p>
         </details>
       </section>
 
       <section className="stack">
-        <h2 className="h-secao">O que significa {predominante.nome.toLowerCase()}</h2>
+        <h2 className="h-secao">O que mais está pesando hoje: {predominante.nome.toLowerCase()}</h2>
         <p className="lede">{predominante.texto}</p>
       </section>
 
       <section className="stack">
-        <h2 className="h-secao">Seus três processos mais presentes hoje</h2>
-        {resultado.topProcessos.length === 0 && (
-          <p className="lede">Você não marcou nenhuma alternativa, então não há processos a mostrar.</p>
-        )}
-        {resultado.topProcessos.map((id, i) => (
-          <article key={id} className="processo">
-            <span className="processo-rank">{i + 1}º lugar</span>
-            <h3 className="processo-nome">{PROCESSOS[id].nome}</h3>
-            <p className="processo-texto">{PROCESSOS[id].texto}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="stack">
-        <h2 className="h-secao">As outras categorias</h2>
+        <h2 className="h-secao">Os outros fatores</h2>
         {ordenadas
           .filter((f) => f.id !== predominante.id)
           .map((f) => (
@@ -430,21 +525,19 @@ function Resultado({
           ))}
       </section>
 
-      <section className="aviso stack-sm">
-        <h2 className="h-secao">{FECHAMENTO.titulo}</h2>
-        {FECHAMENTO.paragrafos.map((p) => (
-          <p key={p.slice(0, 24)} className="processo-texto">
-            {p}
-          </p>
-        ))}
-      </section>
-
       <section className="cta-final">
-        <h2 className="h-secao">Agora que você viu o mapa, o próximo passo</h2>
+        <h2 className="h-secao">
+          Agora que você entendeu mais o que está acontecendo, vamos para o próximo passo
+        </h2>
         <p>
-          Entender o que está acontecendo é a primeira parte. A segunda é ter o que fazer com isso.
-          No curso Meu Desejo Também Importa, cada um desses processos tem uma aula e um exercício
-          prático, no seu ritmo.
+          Este quiz não oferece um diagnóstico, mas ele foi criado para te ajudar a identificar o que
+          pode estar participando da sua dificuldade relacionada ao desejo sexual. E entender o que
+          está acontecendo é a primeira parte. A segunda é ter o que fazer com isso, certo?
+        </p>
+        <p>
+          No curso Meu Desejo Também Importa vamos te ajudar a pensar no que fazer. Nele, você vai
+          entender mais sobre o desejo sexual e construir ferramentas para lidar com a dificuldade
+          mais importante no seu caso.
         </p>
         <a className="btn" href={LINK_VSL}>
           Ver o próximo passo
@@ -467,16 +560,24 @@ function MarcaSer() {
   );
 }
 
-/** Ponto de integração do lead. Hoje é um no-op seguro: nada quebra se a rota não existir. */
+/** Ponto de integração do lead. Nunca bloqueia a tela de resultado. */
 function enviarLead(perfil: Perfil, respostas: Respostas) {
   try {
     const payload = JSON.stringify({ perfil, respostas, em: new Date().toISOString() });
     if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
       navigator.sendBeacon("/api/lead", new Blob([payload], { type: "application/json" }));
     } else {
-      void fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
+      void fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      });
     }
   } catch {
     /* o resultado nunca depende do envio do lead */
   }
 }
+
+/* PROCESSOS segue exportado em lib/quiz.ts e alimenta a pontuação, mesmo sem
+   aparecer na tela: é ele que decide em qual fator cada alternativa pontua. */
+void PROCESSOS;
