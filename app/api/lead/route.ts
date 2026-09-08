@@ -5,7 +5,6 @@ import { CATEGORIAS, calcular, type Respostas } from "@/lib/quiz";
 type Perfil = {
   nome?: string;
   idade?: string;
-  genero?: string;
   whatsapp?: string;
   satisfacao?: number | null;
   disposicao?: number | null;
@@ -43,13 +42,12 @@ export async function POST(request: Request) {
 
     await sql`
       insert into leads_quiz (
-        nome, idade, genero, whatsapp, satisfacao, disposicao,
+        nome, idade, whatsapp, satisfacao, disposicao,
         categoria_predominante, percentual_categorias,
         top_processos, pontos_processos, respostas
       ) values (
         ${perfil.nome?.trim() || null},
         ${Number.isFinite(idade) ? idade : null},
-        ${perfil.genero || null},
         ${perfil.whatsapp?.trim() || null},
         ${typeof perfil.satisfacao === "number" ? perfil.satisfacao : null},
         ${typeof perfil.disposicao === "number" ? perfil.disposicao : null},

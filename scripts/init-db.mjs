@@ -24,7 +24,6 @@ await sql`
     criado_em              timestamptz not null default now(),
     nome                   text,
     idade                  int,
-    genero                 text,
     whatsapp               text,
     satisfacao             int,
     disposicao             int,

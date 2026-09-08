@@ -74,7 +74,7 @@ Se `DATABASE_URL` não existir, a rota responde `{ ok: true, guardado: false }` 
 
 ### O que fica guardado
 
-Tabela `leads_quiz`: `nome`, `idade`, `genero`, `whatsapp`, `satisfacao` e `disposicao` (0 a 10),
+Tabela `leads_quiz`: `nome`, `idade`, `whatsapp`, `satisfacao` e `disposicao` (0 a 10),
 `categoria_predominante`, e em `jsonb` os `percentual_categorias`, `top_processos`,
 `pontos_processos` e as `respostas` cruas. Guardar as respostas cruas permite recalcular tudo
 depois, caso a pontuação ou o balanceamento do instrumento mudem.

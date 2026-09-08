@@ -21,7 +21,6 @@ type Etapa = "abertura" | "perfil" | "perguntas" | "disposicao" | "resultado";
 type Perfil = {
   nome: string;
   idade: string;
-  genero: string;
   whatsapp: string;
   satisfacao: number | null;
   disposicao: number | null;
@@ -30,7 +29,6 @@ type Perfil = {
 const PERFIL_VAZIO: Perfil = {
   nome: "",
   idade: "",
-  genero: "",
   whatsapp: "",
   satisfacao: null,
   disposicao: null,
@@ -91,10 +89,7 @@ export default function Quiz() {
   }
 
   const perfilCompleto =
-    perfil.nome.trim().length > 1 &&
-    perfil.idade !== "" &&
-    perfil.genero !== "" &&
-    perfil.satisfacao !== null;
+    perfil.nome.trim().length > 1 && perfil.idade !== "" && perfil.satisfacao !== null;
 
   return (
     <div className="shell">
@@ -344,22 +339,6 @@ function FormPerfil({
             onChange={(e) => setPerfil({ ...perfil, idade: e.target.value })}
             placeholder="Ex: 34"
           />
-        </div>
-
-        <div className="campo">
-          <label htmlFor="genero">Gênero</label>
-          <select
-            id="genero"
-            value={perfil.genero}
-            onChange={(e) => setPerfil({ ...perfil, genero: e.target.value })}
-          >
-            <option value="">Selecione</option>
-            <option value="mulher-cis">Mulher cis</option>
-            <option value="mulher-trans">Mulher trans</option>
-            <option value="nao-binarie">Não binárie</option>
-            <option value="outro">Outro</option>
-            <option value="prefiro-nao-dizer">Prefiro não dizer</option>
-          </select>
         </div>
 
         <div className="campo">
