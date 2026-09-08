@@ -97,11 +97,18 @@ select categoria_predominante, count(*) from leads_quiz group by 1 order by 2 de
 
 Tokens em [`app/globals.css`](app/globals.css). Cores tiradas do site e do logo:
 vinho `#792A28`, grafite `#1D1E20`, off-white `#FCF8F8`, rosa `#B58585`.
-Tipos: Newsreader (títulos) e DM Sans (texto e interface, mesma do site).
+
+Tipos da marca: **Hasson** nos títulos e **Montserrat** no texto e na interface.
+
+Montserrat vem do Google Fonts via `next/font`. **Hasson não é de distribuição pública**, então
+está declarada por `@font-face` apontando para `public/fonts/`. Basta colocar os arquivos
+`hasson.woff2` e `hasson-bold.woff2` nessa pasta que ela assume os títulos sozinha, sem mexer em
+código. Enquanto não houver arquivo, os títulos caem em Montserrat, que também é da marca.
+Instruções em `public/fonts/LEIA-ME.txt`.
 
 As quatro cores das categorias foram validadas para banda de luminância, croma, separação sob
-daltonismo e contraste. A cor nunca carrega a identidade sozinha: cada fatia tem rótulo direto,
-barras nomeadas e tabela.
+daltonismo e contraste. A cor nunca carrega a identidade sozinha: a legenda ao lado da rosca nomeia
+cada fatia e repete o número, e a tabela do rodapé abre a conta inteira.
 
 **Pendente:** trocar a marca provisória (`MarcaSer` em `app/page.tsx`) pelo arquivo real do logo em
 `public/`.

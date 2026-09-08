@@ -1,0 +1,13 @@
+Coloque aqui os arquivos da fonte Hasson:
+
+  hasson.woff2        (peso regular / 400)
+  hasson-bold.woff2   (peso bold / 700)
+
+Opcionalmente os .woff equivalentes, para navegadores antigos.
+
+Assim que os arquivos existirem, os titulos do quiz passam a usar Hasson
+automaticamente. Nao e preciso mexer em codigo. Enquanto nao houver arquivo,
+os titulos ficam em Montserrat, que tambem e fonte da marca.
+
+Se os arquivos vierem em .otf ou .ttf, da pra converter para .woff2 em
+https://transfonter.org (que gera arquivos bem menores e carregam mais rapido).

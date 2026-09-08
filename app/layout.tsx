@@ -1,17 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Newsreader } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-newsreader",
-  weight: ["400", "500"],
+  variable: "--font-montserrat",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -38,8 +32,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body className={`${dmSans.variable} ${newsreader.variable}`}>{children}</body>
+    // a variavel da fonte fica no <html>: globals.css monta --texto e --display
+    // em :root, e um var() so enxerga o que foi definido no proprio escopo ou acima
+    <html lang="pt-BR" className={montserrat.variable}>
+      <body>{children}</body>
     </html>
   );
 }

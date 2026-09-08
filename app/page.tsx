@@ -438,89 +438,101 @@ function Resultado({ perfil, resultado }: { perfil: Perfil; resultado: ReturnTyp
         </p>
       </section>
 
-      <section className="card grafico-bloco" aria-label="Distribuição dos fatores">
-        <div className="donut-holder">
-          <Donut
-            fatias={fatias}
-            titulo={`Como as suas respostas se distribuem entre os quatro fatores. O que mais pesa é ${predominante.nome}, com ${resultado.percentualCategoria[predominante.id]}%.`}
-          />
-          <div className="donut-centro">
-            <span className="rotulo">O que mais pesa</span>
-            <span className="valor">{resultado.percentualCategoria[predominante.id]}%</span>
-            <span className="nome">{predominante.nome}</span>
-          </div>
-        </div>
-
-        <div className="barras">
-          {ordenadas.map((f) => (
-            <div key={f.id}>
-              <div className="barra-topo">
-                <span className="barra-chip" style={{ background: f.cor }} aria-hidden="true" />
-                <span className="barra-nome">{f.nome}</span>
-                <span className="barra-valor">{f.valor}%</span>
-              </div>
-              <div className="barra-track">
-                <div className="barra-fill" style={{ width: `${f.valor}%`, background: f.cor }} />
-              </div>
+      <section className="res-hero entra" aria-label="Distribuição dos fatores">
+        <div className="res-topo">
+          <div className="donut-holder">
+            <Donut
+              fatias={fatias}
+              titulo={`Como as suas respostas se distribuem entre os quatro fatores. O que mais pesa é ${predominante.nome}, com ${resultado.percentualCategoria[predominante.id]}%.`}
+            />
+            <div className="donut-centro">
+              <span className="rotulo">O que mais pesa</span>
+              <span className="valor">{resultado.percentualCategoria[predominante.id]}%</span>
+              <span className="nome">{predominante.nome}</span>
             </div>
-          ))}
+          </div>
+
+          <ul className="legenda">
+            {ordenadas.map((f) => (
+              <li
+                key={f.id}
+                className={`legenda-item${f.id === predominante.id ? " destaque" : ""}`}
+              >
+                <span className="legenda-rail" style={{ background: f.cor }} aria-hidden="true" />
+                <span className="legenda-nome">{f.nome}</span>
+                <span className="legenda-valor" style={{ color: f.cor }}>
+                  {f.valor}%
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <details className="tabela">
-          <summary>Ver os números por trás do gráfico</summary>
-          <div className="tabela-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Fator</th>
-                  <th scope="col">Escolhas</th>
-                  <th scope="col">Máximo</th>
-                  <th scope="col">Peso</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ordenadas.map((f) => (
-                  <tr key={f.id}>
-                    <th scope="row" style={{ fontWeight: 400, color: "var(--ink)" }}>
-                      {f.nome}
-                    </th>
-                    <td className="num">
-                      {resultado.pontosCategoria[f.id as keyof typeof resultado.pontosCategoria]}
-                    </td>
-                    <td className="num">
-                      {TETO_POR_CATEGORIA[f.id as keyof typeof TETO_POR_CATEGORIA]}
-                    </td>
-                    <td className="num">{f.valor}%</td>
+        <div className="res-rodape">
+          <details className="tabela">
+            <summary>Ver os números por trás do gráfico</summary>
+            <div className="tabela-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Fator</th>
+                    <th scope="col">Escolhas</th>
+                    <th scope="col">Máximo</th>
+                    <th scope="col">Peso</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {ordenadas.map((f) => (
+                    <tr key={f.id}>
+                      <th scope="row" style={{ fontWeight: 500, color: "var(--ink)" }}>
+                        {f.nome}
+                      </th>
+                      <td className="num">
+                        {resultado.pontosCategoria[f.id as keyof typeof resultado.pontosCategoria]}
+                      </td>
+                      <td className="num">
+                        {TETO_POR_CATEGORIA[f.id as keyof typeof TETO_POR_CATEGORIA]}
+                      </td>
+                      <td className="num">{f.valor}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="nota" style={{ marginTop: 12 }}>
+              Os fatores têm tamanhos diferentes dentro do quiz: contexto de vida aparece menos
+              vezes que os outros três. Por isso o peso não é a contagem simples, e sim o quanto de
+              cada fator você marcou em relação ao total que ele poderia ter.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section className="stack">
+        <span className="eyebrow">O que mais está pesando hoje</span>
+        <article
+          className="fator fator-destaque"
+          style={{ borderLeftColor: `var(--cat-${predominante.id})` }}
+        >
+          <div className="fator-topo">
+            <h2 className="fator-nome">{predominante.nome}</h2>
+            <span className="fator-pct">{resultado.percentualCategoria[predominante.id]}%</span>
           </div>
-          <p className="nota" style={{ marginTop: 12 }}>
-            Os fatores têm tamanhos diferentes dentro do quiz: contexto de vida aparece menos vezes
-            que os outros três. Por isso o peso não é a contagem simples, e sim o quanto de cada
-            fator você marcou em relação ao total que ele poderia ter.
-          </p>
-        </details>
+          <p className="fator-texto">{predominante.texto}</p>
+        </article>
       </section>
 
       <section className="stack">
-        <h2 className="h-secao">O que mais está pesando hoje: {predominante.nome.toLowerCase()}</h2>
-        <p className="lede">{predominante.texto}</p>
-      </section>
-
-      <section className="stack">
-        <h2 className="h-secao">Os outros fatores</h2>
+        <span className="eyebrow">Os outros fatores</span>
         {ordenadas
           .filter((f) => f.id !== predominante.id)
           .map((f) => (
-            <article key={f.id} className="processo" style={{ borderLeftColor: f.cor }}>
-              <span className="processo-rank">
-                {f.nome} · {f.valor}%
-              </span>
-              <p className="processo-texto" style={{ marginTop: 8 }}>
-                {CATEGORIAS[f.id as keyof typeof CATEGORIAS].texto}
-              </p>
+            <article key={f.id} className="fator" style={{ borderLeftColor: f.cor }}>
+              <div className="fator-topo">
+                <h3 className="fator-nome">{f.nome}</h3>
+                <span className="fator-pct">{f.valor}%</span>
+              </div>
+              <p className="fator-texto">{CATEGORIAS[f.id as keyof typeof CATEGORIAS].texto}</p>
             </article>
           ))}
       </section>

@@ -1,20 +1,24 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 
 export type FatiaDonut = { id: string; nome: string; valor: number; cor: string };
 
 /**
  * Rosca de quatro fatias.
  *
- * A cor sozinha nunca carrega a identidade: cada fatia tambem recebe rotulo
- * direto quando tem espaco, e o resultado repete os mesmos numeros em barras
- * nomeadas e em tabela. Entre as fatias existe um respiro da propria superficie,
- * pra que dois tons vizinhos nunca encostem.
+ * A cor sozinha nunca carrega a identidade: a legenda ao lado nomeia cada
+ * fatia e repete o numero, e a tabela do rodape traz a conta inteira. Por isso
+ * a rosca nao leva rotulo proprio, que so duplicaria a legenda e ainda corria
+ * risco de ser cortado pela borda do cartao. Entre as fatias fica um respiro,
+ * pra que dois tons vizinhos nao encostem.
+ *
+ * Os arcos entram desenhando. Quem pediu menos movimento no sistema recebe
+ * o grafico ja pronto, sem animacao.
  */
 export default function Donut({
   fatias,
-  espessura = 26,
+  espessura = 22,
   titulo,
 }: {
   fatias: FatiaDonut[];
@@ -22,11 +26,25 @@ export default function Donut({
   titulo: string;
 }) {
   const uid = useId();
+  const [desenhado, setDesenhado] = useState(false);
+
+  useEffect(() => {
+    const semMovimento =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (semMovimento) {
+      setDesenhado(true);
+      return;
+    }
+    const t = window.setTimeout(() => setDesenhado(true), 60);
+    return () => window.clearTimeout(t);
+  }, []);
+
   const tamanho = 240;
   const centro = tamanho / 2;
-  const raio = centro - espessura / 2 - 2;
+  const raio = centro - espessura / 2 - 3;
   const circunferencia = 2 * Math.PI * raio;
-  const respiro = 1.6; // graus de folga entre fatias
+  const respiro = 2; // graus de folga entre fatias
 
   let anguloAcumulado = -90;
 
@@ -36,18 +54,16 @@ export default function Donut({
       const angulo = (f.valor / 100) * 360;
       const inicio = anguloAcumulado;
       anguloAcumulado += angulo;
-      const anguloVisivel = Math.max(angulo - respiro, angulo * 0.55);
+      const anguloVisivel = Math.max(angulo - respiro, angulo * 0.5);
       const comprimento = (anguloVisivel / 360) * circunferencia;
       return {
         ...f,
         rotacao: inicio + respiro / 2,
-        dash: `${comprimento} ${circunferencia - comprimento}`,
+        comprimento,
         anguloMedio: inicio + angulo / 2,
         angulo,
       };
     });
-
-  const raioRotulo = raio + espessura / 2 + 15;
 
   return (
     <svg
@@ -55,7 +71,7 @@ export default function Donut({
       width="100%"
       role="img"
       aria-labelledby={`${uid}-t`}
-      style={{ display: "block", overflow: "visible" }}
+      style={{ display: "block" }}
     >
       <title id={`${uid}-t`}>{titulo}</title>
 
@@ -68,7 +84,7 @@ export default function Donut({
         strokeWidth={espessura}
       />
 
-      {arcos.map((a) => (
+      {arcos.map((a, i) => (
         <circle
           key={a.id}
           cx={centro}
@@ -77,35 +93,16 @@ export default function Donut({
           fill="none"
           stroke={a.cor}
           strokeWidth={espessura}
-          strokeDasharray={a.dash}
+          strokeDasharray={`${a.comprimento} ${circunferencia - a.comprimento}`}
+          strokeDashoffset={desenhado ? 0 : a.comprimento}
           strokeLinecap="butt"
           transform={`rotate(${a.rotacao} ${centro} ${centro})`}
+          style={{
+            transition: `stroke-dashoffset 760ms cubic-bezier(0.22, 0.61, 0.36, 1) ${i * 110}ms`,
+          }}
         />
       ))}
 
-      {arcos
-        .filter((a) => a.angulo >= 34)
-        .map((a) => {
-          const rad = (a.anguloMedio * Math.PI) / 180;
-          const x = centro + raioRotulo * Math.cos(rad);
-          const y = centro + raioRotulo * Math.sin(rad);
-          const alinhamento = Math.cos(rad) > 0.25 ? "start" : Math.cos(rad) < -0.25 ? "end" : "middle";
-          return (
-            <text
-              key={`r-${a.id}`}
-              x={x}
-              y={y}
-              textAnchor={alinhamento}
-              dominantBaseline="middle"
-              fill="var(--ink-2)"
-              fontSize="12"
-              fontFamily="var(--font-dm-sans), sans-serif"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            >
-              {a.valor}%
-            </text>
-          );
-        })}
     </svg>
   );
 }
